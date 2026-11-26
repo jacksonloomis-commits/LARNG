@@ -1,7 +1,7 @@
 import type { Aura, Rarity } from './types'
 
 export const RARITIES: { name: Rarity; color: string; weight: number }[] = [
-  { name: 'Common', color: '#9aa4b2', weight: 1 },
+  { name: 'Common', color: '#9aa4b2', weight: 2 },
   { name: 'Uncommon', color: '#55d69e', weight: 10 },
   { name: 'Rare', color: '#56a9ff', weight: 50 },
   { name: 'Epic', color: '#b17aff', weight: 250 },
