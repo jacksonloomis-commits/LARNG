@@ -3,20 +3,23 @@ import type { Aura, Rarity } from './types'
 
 const rarityOrder: Rarity[] = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythical', 'Divine', 'Celestial', 'Transcendent', 'Eternal']
 
-// Luck gently shifts probability toward higher tiers without making the rarest tiers linear or guaranteed.
+// Each aura starts with inverse-odds weight. Luck applies a rarity-sensitive multiplier
+// so higher tiers benefit more, while a soft cap prevents unbounded scaling.
 export function rollAura(luckLevel: number, random = Math.random): Aura {
   const luck = Math.min(Math.max(luckLevel, 0), 100)
-  const tierWeights = rarityOrder.map((_, index) => Math.pow(1.0 + luck * 0.035, index * 0.72))
-  const total = tierWeights.reduce((sum, weight) => sum + weight, 0)
+  const luckFactor = 1 + luck * 0.035
+  const weighted = AURAS.map(aura => {
+    const tier = rarityOrder.indexOf(aura.rarity)
+    const luckBoost = Math.pow(luckFactor, tier * 0.72)
+    return { aura, weight: (1 / aura.odds) * luckBoost }
+  })
+  const total = weighted.reduce((sum, item) => sum + item.weight, 0)
   let pick = random() * total
-  let selected = 0
-  for (let i = 0; i < tierWeights.length; i++) {
-    pick -= tierWeights[i]
-    if (pick <= 0) { selected = i; break }
+  for (const item of weighted) {
+    pick -= item.weight
+    if (pick <= 0) return item.aura
   }
-  const tier = rarityOrder[selected]
-  const pool = AURAS.filter(aura => aura.rarity === tier)
-  return pool[Math.floor(random() * pool.length)] ?? AURAS[0]
+  return weighted[weighted.length - 1].aura
 }
 
 export function formatOdds(odds: number): string {
