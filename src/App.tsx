@@ -20,6 +20,14 @@ export default function App() {
   const [auto, setAuto] = useState(false)
 
   useEffect(() => { saveGame(save) }, [save])
+
+  // Auto-roll uses the same guarded roll path as the manual button and respects speed upgrades.
+  useEffect(() => {
+    if (!auto || rolling) return
+    const delay = Math.max(180, 650 - save.speedLevel * 20)
+    const timer = window.setTimeout(() => performRoll(), delay)
+    return () => window.clearTimeout(timer)
+  }, [auto, rolling, save.speedLevel, save.luckLevel])
   const owned = useMemo(() => Object.entries(save.inventory).filter(([, count]) => count > 0), [save.inventory])
   const equippedAura = AURAS.find(a => a.id === save.equipped)
   const discoveredCount = save.discovered.length
@@ -42,7 +50,7 @@ export default function App() {
       setRolling(false)
       if (fresh) setNotice('NEW DISCOVERY')
       else setNotice('DUPLICATE · +3 COINS')
-    }, 650)
+    }, Math.max(180, 650 - save.speedLevel * 20))
   }
   function dismantle(id: string) {
     const aura = AURAS.find(a => a.id === id)
